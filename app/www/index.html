@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#f7f3ef">
+<title>观己 · 身心状态记录</title>
+<style>
+  :root{
+    --bg:#f7f3ef;
+    --bg-2:#fdfbf8;
+    --card:#ffffff;
+    --ink:#2b2a33;
+    --ink-soft:#8a8696;
+    --ink-faint:#b6b2bf;
+    --line:#efe9e2;
+    --primary:#7c6cf0;
+    --primary-soft:#efeaff;
+    --accent:#ff8f6b;
+    --green:#2ec4a6;
+    --shadow:0 8px 24px rgba(80,60,120,.08);
+    --shadow-sm:0 3px 10px rgba(80,60,120,.06);
+    --radius:20px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+    background:linear-gradient(160deg,#f7f3ef 0%,#f3ecf8 55%,#f0f6f2 100%);
+    color:var(--ink);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    letter-spacing:.2px;
+  }
+  #app{max-width:480px;margin:0 auto;padding:0 16px calc(30px + env(safe-area-inset-bottom));}
+
+  /* ---------- 顶部 ---------- */
+  .topbar{padding:calc(22px + env(safe-area-inset-top)) 4px 14px;display:flex;align-items:center;justify-content:space-between;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#a78bfa);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--shadow-sm);}
+  .brand .name{font-size:20px;font-weight:700;letter-spacing:.5px;}
+  .brand .sub{font-size:12px;color:var(--ink-soft);}
+  .today-chip{font-size:12px;color:var(--ink-soft);background:rgba(255,255,255,.7);padding:7px 12px;border-radius:999px;border:1px solid var(--line);}
+
+  /* ---------- 今日概览卡 ---------- */
+  .hero{
+    background:linear-gradient(135deg,#6d5df0 0%,#9b7bf2 55%,#c78bf5 100%);
+    border-radius:24px;padding:22px 20px;color:#fff;position:relative;overflow:hidden;
+    box-shadow:0 12px 30px rgba(109,93,240,.28);
+  }
+  .hero::after{content:"";position:absolute;right:-30px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.10);}
+  .hero::before{content:"";position:absolute;right:40px;bottom:-50px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);}
+  .hero .label{font-size:13px;opacity:.9;font-weight:500;}
+  .hero .big{font-size:44px;font-weight:800;margin:6px 0 2px;line-height:1;}
+  .hero .big .unit{font-size:18px;font-weight:500;opacity:.8;margin-left:2px;}
+  .hero .mood{font-size:15px;font-weight:600;margin-top:6px;}
+  .hero .hint{font-size:12px;opacity:.75;margin-top:4px;}
+
+  /* ---------- 模块网格 ---------- */
+  .section-title{font-size:15px;font-weight:700;margin:24px 4px 12px;color:var(--ink);}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .mod-card{
+    background:var(--card);border-radius:var(--radius);padding:18px 16px;cursor:pointer;
+    box-shadow:var(--shadow-sm);border:1px solid var(--line);transition:transform .15s ease,box-shadow .15s ease;
+    position:relative;overflow:hidden;user-select:none;
+  }
+  .mod-card:active{transform:scale(.97);}
+  .mod-card .icon{font-size:30px;line-height:1;}
+  .mod-card .t{font-size:16px;font-weight:700;margin-top:10px;}
+  .mod-card .d{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.5;}
+  .mod-card .badge{
+    position:absolute;top:14px;right:14px;font-size:10px;padding:3px 8px;border-radius:999px;
+    background:#f0ede8;color:#a49d90;font-weight:600;
+  }
+  .mod-card.soon{opacity:.55;cursor:default;}
+  .mod-card.soon .badge{background:var(--primary-soft);color:var(--primary);}
+
+  /* ---------- 通用 ---------- */
+  .back{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;padding:8px 2px;}
+  .back .arr{font-size:18px;}
+  .card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-sm);border:1px solid var(--line);margin-bottom:14px;}
+  .card h3{font-size:14px;font-weight:700;margin:0 0 12px;color:var(--ink);}
+  .row{display:flex;align-items:center;gap:10px;}
+  .btn{
+    border:none;border-radius:14px;padding:13px 18px;font-size:15px;font-weight:700;cursor:pointer;
+    background:linear-gradient(135deg,var(--primary),#9b7bf2);color:#fff;width:100%;
+    box-shadow:0 6px 16px rgba(109,93,240,.25);transition:transform .12s ease,opacity .12s ease;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn.ghost{background:#f1eefb;color:var(--primary);box-shadow:none;}
+  .btn.small{width:auto;padding:10px 16px;font-size:13px;}
+  input[type=number],input[type=text],input[type=date],input[type=time],select{
+    width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:14px;font-size:15px;
+    color:var(--ink);background:#fbfaf8;outline:none;font-family:inherit;
+  }
+  input:focus,select:focus{border-color:var(--primary);background:#fff;}
+  label.field{display:block;font-size:12px;color:var(--ink-soft);font-weight:600;margin:12px 0 6px;}
+
+  /* ---------- 打分输入 ---------- */
+  .score-input{display:flex;align-items:center;gap:10px;}
+  .score-input input{font-size:28px;font-weight:800;text-align:center;width:100%;}
+  .score-emoji{font-size:40px;line-height:1;}
+
+  /* ---------- 图表 ---------- */
+  .tabs{display:flex;background:#f0ede8;border-radius:12px;padding:3px;margin-bottom:6px;}
+  .tabs .tab{flex:1;text-align:center;padding:8px;font-size:13px;font-weight:600;color:var(--ink-soft);border-radius:10px;cursor:pointer;}
+  .tabs .tab.active{background:#fff;color:var(--ink);box-shadow:var(--shadow-sm);}
+  .chart-wrap{overflow-x:auto;}
+  svg.chart{display:block;width:100%;min-width:320px;}
+
+  /* ---------- 统计 ---------- */
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .stat{background:#faf8f4;border-radius:14px;padding:12px 10px;text-align:center;}
+  .stat .v{font-size:20px;font-weight:800;}
+  .stat .k{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .trend-line{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:12px;padding:10px 12px;border-radius:12px;background:#faf8f4;}
+  .alert-box{margin-top:12px;padding:12px 14px;border-radius:14px;font-size:13px;line-height:1.6;display:none;}
+  .alert-box.show{display:block;}
+  .alert-box.warn{background:#fff3ee;color:#d9603f;border:1px solid #ffd8c8;}
+  .alert-box.good{background:#eefaf5;color:#1f9d7f;border:1px solid #c8f0e2;}
+
+  .note-preview{font-size:12px;color:var(--ink-soft);background:#faf8f4;border-radius:10px;padding:8px 12px;margin-top:8px;}
+
+  /* 历史小列表 */
+  .history{max-height:220px;overflow-y:auto;}
+  .h-item{display:flex;align-items:center;justify-content:space-between;padding:10px 4px;border-bottom:1px solid var(--line);}
+  .h-item:last-child{border-bottom:none;}
+  .h-item .date{font-size:13px;color:var(--ink-soft);}
+  .h-item .score{font-size:16px;font-weight:800;}
+  .h-item .note{font-size:11px;color:var(--ink-faint);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .edit-btn{font-size:12px;color:var(--primary);cursor:pointer;font-weight:600;padding:4px 8px;}
+
+  .hidden{display:none !important;}
+  .muted{color:var(--ink-soft);font-size:12px;}
+
+  /* 轻提示 toast */
+  #toast{
+    position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%);
+    background:rgba(40,36,54,.92);color:#fff;font-size:14px;padding:11px 20px;border-radius:999px;
+    z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s ease;max-width:80vw;text-align:center;
+  }
+  #toast.show{opacity:1;}
+
+  /* 迭代需求浮动按钮 */
+  .req-float-btn{
+    position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));
+    width:52px;height:52px;border-radius:50%;border:none;
+    background:linear-gradient(135deg,var(--primary),#9b7bf2);color:#fff;
+    font-size:22px;box-shadow:0 6px 18px rgba(109,93,240,.35);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    z-index:100;
+  }
+  .req-float-btn:active{transform:scale(.95);}
+
+  /* 弹窗 */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(40,36,54,.45);
+    z-index:200;display:none;align-items:flex-end;justify-content:center;
+    opacity:0;transition:opacity .2s ease;
+  }
+  .modal-overlay.show{display:flex;opacity:1;}
+  .modal-panel{
+    width:100%;max-width:480px;max-height:85vh;background:#fff;
+    border-radius:24px 24px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;transform:translateY(20px);
+    transition:transform .2s ease;
+  }
+  .modal-overlay.show .modal-panel{transform:translateY(0);}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .modal-header h3{margin:0;font-size:17px;}
+  .modal-close{font-size:24px;color:var(--ink-soft);background:none;border:none;padding:4px;cursor:pointer;}
+
+  /* 需求记录 */
+  .req-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+  .req-item{position:relative;background:#faf8f4;border-radius:16px;padding:12px 42px 12px 12px;}
+  .req-item textarea{
+    width:100%;min-height:54px;border:none;background:transparent;resize:vertical;
+    font-family:inherit;font-size:14px;color:var(--ink);outline:none;line-height:1.5;
+  }
+  .req-del{
+    position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;
+    border:none;background:#fff3ee;color:#d9603f;font-size:16px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .req-add{
+    border:2px dashed var(--line);background:transparent;color:var(--ink-soft);
+    border-radius:16px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;
+  }
+  .req-empty{text-align:center;color:var(--ink-soft);font-size:13px;padding:20px 0;}
+
+  /* 日历 */
+  .calendar{max-height:420px;overflow-y:auto;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+  .cal-day{
+    background:#faf8f4;border-radius:14px;padding:8px 4px;text-align:center;cursor:pointer;
+    min-height:78px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    border:2px solid transparent;transition:transform .1s ease;
+  }
+  .cal-day:active{transform:scale(.97);}
+  .cal-day.today{border-color:var(--primary);background:#f1eefb;}
+  .cal-day .wd{font-size:10px;color:var(--ink-soft);margin-bottom:2px;}
+  .cal-day .dn{font-size:15px;font-weight:700;margin-bottom:auto;}
+  .cal-day .emoji{font-size:22px;line-height:1;margin-bottom:2px;}
+  .cal-day .score{font-size:11px;font-weight:700;color:var(--ink-soft);}
+  .cal-day.empty{opacity:.5;}
+  .cal-day.future{opacity:.35;cursor:default;}
+  .cal-day.future:active{transform:none;}
+  .cal-legend{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:10px;}
+
+  /* 详情弹窗内容 */
+  .detail-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);}
+  .detail-row:last-child{border-bottom:none;}
+  .detail-label{font-size:12px;color:var(--ink-soft);font-weight:600;}
+  .detail-value{font-size:15px;font-weight:700;}
+  .detail-note{background:#faf8f4;border-radius:12px;padding:12px;font-size:14px;line-height:1.6;color:var(--ink);min-height:60px;white-space:pre-wrap;}
+  .detail-empty{color:var(--ink-soft);text-align:center;padding:30px 0;font-size:14px;}
+
+  /* 睡眠输入与图表 */
+  .sleep-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .sleep-chart-wrap{overflow-x:auto;padding-bottom:4px;}
+  svg.sleep-chart{display:block;width:100%;min-width:320px;}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div id="app">
+
+  <!-- ============ 主界面 ============ -->
+  <div id="home-view">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">🌿</div>
+        <div>
+          <div class="name">观己</div>
+          <div class="sub">身心状态记录</div>
+        </div>
+      </div>
+      <div class="today-chip" id="today-chip"></div>
+    </div>
+
+    <div class="hero" id="hero" style="cursor:pointer">
+      <div class="label">今日精力状态</div>
+      <div class="big" id="hero-score">—<span class="unit">/100</span></div>
+      <div class="mood" id="hero-mood">还没记录哦</div>
+      <div class="hint" id="hero-hint">点击进入记录</div>
+    </div>
+
+    <div class="section-title">功能模块</div>
+    <div class="grid" id="module-grid"></div>
+  </div>
+
+  <button class="req-float-btn" id="req-float-btn" title="迭代需求记录">📝</button>
+
+  <!-- ============ 精力状态模块 ============ -->
+  <div id="energy-view" class="hidden">
+    <div class="topbar" style="padding-top:calc(18px + env(safe-area-inset-top));">
+      <div class="back" id="energy-back"><span class="arr">←</span> 返回</div>
+      <div class="today-chip">精力状态</div>
+    </div>
+
+    <!-- 今日状态 -->
+    <div class="hero" id="energy-hero">
+      <div class="label" id="energy-hero-label">今日精力状态</div>
+      <div class="big" id="energy-hero-score">—<span class="unit">/100</span></div>
+      <div class="mood" id="energy-hero-mood"></div>
+    </div>
+
+    <!-- 录入 -->
+    <div class="card">
+      <h3>📝 记录精力状态</h3>
+      <div class="score-input">
+        <div class="score-emoji" id="score-emoji">🫥</div>
+        <input type="number" id="score-input" min="0" max="100" placeholder="0–100" inputmode="numeric">
+      </div>
+      <label class="field">日期</label>
+      <input type="date" id="date-input">
+      <label class="field">备注（可选）</label>
+      <input type="text" id="note-input" placeholder="今天发生了什么…">
+      <label class="field">睡眠（可选）</label>
+      <div class="sleep-row">
+        <div>
+          <label class="field" style="margin:0 0 4px;font-size:11px;">入睡时间</label>
+          <input type="time" id="sleep-input">
+        </div>
+        <div>
+          <label class="field" style="margin:0 0 4px;font-size:11px;">起床时间</label>
+          <input type="time" id="wake-input">
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <button class="btn" id="save-btn">保存记录</button>
+      </div>
+      <div class="muted" style="margin-top:8px;">一天一条；可补录最近 7 天；保存后仍可修改。</div>
+    </div>
+
+    <!-- 图表 -->
+    <div class="card">
+      <h3>📈 波动趋势</h3>
+      <div class="tabs">
+        <div class="tab active" data-range="week">周</div>
+        <div class="tab" data-range="month">月</div>
+      </div>
+      <div class="chart-wrap" id="chart-wrap"></div>
+    </div>
+
+    <!-- 睡眠趋势 -->
+    <div class="card">
+      <h3>💤 睡眠趋势</h3>
+      <div class="sleep-chart-wrap" id="sleep-chart-wrap"></div>
+    </div>
+
+    <!-- 统计 -->
+    <div class="card">
+      <h3>🧭 洞察</h3>
+      <div class="stats" id="stats"></div>
+      <div class="trend-line" id="trend-line"></div>
+      <div class="alert-box" id="alert-box"></div>
+    </div>
+
+    <!-- 每日记录 -->
+    <div class="card">
+      <h3>🗓 每日记录</h3>
+      <div class="calendar" id="calendar"></div>
+      <div class="cal-legend">点击任意一天查看详情</div>
+    </div>
+
+    <!-- 导出 & 备份 & 提醒 -->
+    <div class="card">
+      <h3>⚙️ 数据与提醒</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn ghost" id="export-btn">⬇️ 导出为表格（CSV）</button>
+        <div class="row">
+          <button class="btn small ghost" id="backup-btn">💾 备份数据</button>
+          <button class="btn small ghost" id="restore-btn">📥 恢复数据</button>
+        </div>
+        <input type="file" id="restore-file" accept=".json,application/json" style="display:none;">
+        <label class="field" style="margin:4px 0 6px;">每日提醒时间（可选）</label>
+        <div class="row">
+          <input type="time" id="remind-time">
+          <button class="btn small" id="remind-btn">保存提醒</button>
+        </div>
+        <div class="muted">数据仅保存在本机，不会上传；用「备份/恢复」可跨设备或重装后找回记录。</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 迭代需求记录弹窗 -->
+<div class="modal-overlay" id="req-modal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h3>📝 迭代需求记录</h3>
+      <button class="modal-close" id="req-close">&times;</button>
+    </div>
+    <div class="req-list" id="req-list"></div>
+    <button class="btn ghost" id="req-copy">📋 一键复制全部需求</button>
+  </div>
+</div>
+
+<!-- 日期详情弹窗 -->
+<div class="modal-overlay" id="day-modal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h3 id="day-modal-title">记录详情</h3>
+      <button class="modal-close" id="day-close">&times;</button>
+    </div>
+    <div id="day-detail"></div>
+  </div>
+</div>
+
+<script src="notify.bundle.js"></script>
+<script src="native.bundle.js"></script>
+<script>
+/* =========================================================
+   观己 · 单文件应用（完全离线，localStorage 持久化）
+   架构：模块注册表 + 数据层（预留日后跨端同步口子）
+   ========================================================= */
+
+/* ---------------- 数据层 ---------------- */
+const Storage = {
+  KEY: 'guanji_data_v1',
+  // 预留：未来接入云端同步时，只需在这里加 sync() 逻辑
+  load(){
+    try{
+      const raw = localStorage.getItem(this.KEY);
+      if(!raw) return {records:{}, settings:{remindTime:'', lowThreshold:40}};
+      return JSON.parse(raw);
+    }catch(e){ return {records:{}, settings:{remindTime:'', lowThreshold:40}}; }
+  },
+  save(data){
+    localStorage.setItem(this.KEY, JSON.stringify(data));
+  },
+  exportCSV(){
+    const data = this.load();
+    const rows = [['date','score','note']];
+    const dates = Object.keys(data.records).sort();
+    dates.forEach(d=>{
+      const r = data.records[d];
+      rows.push([d, r.score, (r.note||'').replace(/[\r\n,]/g,' ')]);
+    });
+    const csv = '\ufeff' + rows.map(r=>r.join(',')).join('\r\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '精力状态_' + todayStr() + '.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+};
+
+let state = Storage.load();
+function saveState(){ Storage.save(state); }
+
+/* ---------------- 迭代需求存储 ---------------- */
+const ReqStorage = {
+  KEY: 'guanji_requirements_v1',
+  load(){
+    try{ const raw = localStorage.getItem(this.KEY); return raw ? JSON.parse(raw) : []; }
+    catch(e){ return []; }
+  },
+  save(list){ localStorage.setItem(this.KEY, JSON.stringify(list)); }
+};
+
+/* ---------------- 工具 ---------------- */
+function todayStr(){ return toDateStr(new Date()); }
+function toDateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtDateCN(str){
+  const [y,m,d] = str.split('-').map(Number);
+  return m+'月'+d+'日';
+}
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return toDateStr(d); }
+function mondayOfThisWeek(){
+  const d = new Date();
+  const day = d.getDay(); // 0=周日,1=周一..6=周六
+  const diff = day===0 ? 6 : day-1; // 距本周一的天数
+  d.setDate(d.getDate() - diff);
+  return d;
+}
+function parseHM(t){
+  if(!t) return null;
+  const [h,m] = t.split(':').map(Number);
+  if(isNaN(h) || isNaN(m)) return null;
+  return h*60 + m;
+}
+function sleepDurationHours(sleepTime, wakeTime){
+  const s = parseHM(sleepTime), w = parseHM(wakeTime);
+  if(s == null || w == null) return null;
+  let diff = w - s;
+  if(diff <= 0) diff += 24*60;
+  return diff / 60;
+}
+function formatDuration(hours){
+  if(hours == null) return '—';
+  const h = Math.floor(hours), m = Math.round((hours - h)*60);
+  return h + '小时' + (m ? m + '分' : '');
+}
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function scoreTier(s){
+  if(s==null) return {emoji:'🫥', color:'#c9c4d4', label:'未记录', name:'低'};
+  if(s<20) return {emoji:'😫', color:'#5b7bd5', label:'极度疲惫', name:'极低'};
+  if(s<40) return {emoji:'😞', color:'#6c8fe0', label:'疲惫乏力', name:'低'};
+  if(s<60) return {emoji:'😐', color:'#3fb8a0', label:'状态一般', name:'中'};
+  if(s<80) return {emoji:'🙂', color:'#57b95f', label:'状态良好', name:'良'};
+  if(s<90) return {emoji:'😄', color:'#f2a93b', label:'精力充沛', name:'高'};
+  return {emoji:'🤩', color:'#f47b4b', label:'精力爆表', name:'极高'};
+}
+
+/* ---------------- 模块注册表 ---------------- */
+const modules = [
+  {
+    id:'energy', name:'精力状态', icon:'⚡',
+    desc:'每天记录精力分数，看周/月波动',
+    active:true, render:openEnergy
+  },
+  {
+    id:'bazi', name:'八字排盘', icon:'🔮',
+    desc:'四柱八字命盘推算',
+    active:false, soon:true
+  },
+  {
+    id:'liuyao', name:'六爻卜卦', icon:'🪙',
+    desc:'铜钱起卦、六爻断事',
+    active:false, soon:true
+  }
+];
+
+/* ---------------- 路由 ---------------- */
+function showView(id){
+  document.getElementById('home-view').classList.toggle('hidden', id!=='home');
+  document.getElementById('energy-view').classList.toggle('hidden', id!=='energy');
+  window.scrollTo(0,0);
+  if(id==='energy') renderEnergy();
+  if(id==='home') renderHome();
+}
+function openEnergy(){ showView('energy'); }
+
+/* ---------------- 主界面渲染 ---------------- */
+function renderHome(){
+  document.getElementById('today-chip').textContent = '今天 · ' + fmtDateCN(todayStr());
+  const today = state.records[todayStr()];
+  const tier = scoreTier(today ? today.score : null);
+  document.getElementById('hero-score').innerHTML = (today?today.score:'—')+'<span class="unit">/100</span>';
+  document.getElementById('hero-mood').textContent = today ? tier.emoji+' '+tier.label : '还没记录哦';
+  document.getElementById('hero-hint').textContent = today ? '点击查看或修改' : '点击进入记录';
+  document.getElementById('hero').onclick = openEnergy;
+
+  const grid = document.getElementById('module-grid');
+  grid.innerHTML = '';
+  modules.forEach(m=>{
+    const el = document.createElement('div');
+    el.className = 'mod-card' + (m.soon?' soon':'');
+    el.innerHTML = '<div class="icon">'+m.icon+'</div>'+
+      '<div class="t">'+m.name+'</div>'+
+      '<div class="d">'+m.desc+'</div>'+
+      (m.soon?'<div class="badge">即将上线</div>':'<div class="badge">已上线</div>');
+    if(m.active) el.onclick = m.render;
+    grid.appendChild(el);
+  });
+}
+
+/* ---------------- 精力模块 ---------------- */
+let chartRange = 'week';
+
+function energyRecords(range){
+  const list = [];
+  if(range==='week'){
+    // 自然周：周一到周日
+    const mon = mondayOfThisWeek();
+    for(let i=0;i<7;i++){
+      const d = new Date(mon);
+      d.setDate(mon.getDate()+i);
+      const ds = toDateStr(d);
+      list.push({date:ds, rec: state.records[ds] || null});
+    }
+  } else {
+    // 月：最近30天
+    for(let i=29;i>=0;i--){
+      const d = daysAgo(i);
+      list.push({date:d, rec: state.records[d] || null});
+    }
+  }
+  return list;
+}
+
+function renderEnergy(){
+  document.getElementById('energy-back').onclick = ()=>showView('home');
+  // 录入区默认今天，且禁止选未来日期
+  const dateInput = document.getElementById('date-input');
+  dateInput.max = todayStr();
+  if(!dateInput.value) dateInput.value = todayStr();
+  const today = state.records[todayStr()];
+  const tier = scoreTier(today?today.score:null);
+  document.getElementById('energy-hero-label').textContent = '今日精力状态';
+  document.getElementById('energy-hero-score').innerHTML = (today?today.score:'—')+'<span class="unit">/100</span>';
+  document.getElementById('energy-hero-mood').textContent = today ? tier.emoji+' '+tier.label : '今天还没记录';
+  // 睡眠输入回显
+  document.getElementById('sleep-input').value = today && today.sleepTime ? today.sleepTime : '';
+  document.getElementById('wake-input').value = today && today.wakeTime ? today.wakeTime : '';
+  renderChart();
+  renderSleepChart();
+  renderStats();
+  renderCalendar();
+  renderRemind();
+}
+
+function onScoreInput(){
+  const v = document.getElementById('score-input').value;
+  const n = v===''?null:Number(v);
+  if(n==null||isNaN(n)){ document.getElementById('score-emoji').textContent='🫥'; return; }
+  const t = scoreTier(Math.max(0,Math.min(100,n)));
+  document.getElementById('score-emoji').textContent = t.emoji;
+}
+document.getElementById('score-input').addEventListener('input', onScoreInput);
+
+document.getElementById('save-btn').addEventListener('click', ()=>{
+  const scoreInput = document.getElementById('score-input');
+  const n = Number(scoreInput.value);
+  const date = document.getElementById('date-input').value;
+  const note = document.getElementById('note-input').value.trim();
+  const sleepTime = document.getElementById('sleep-input').value;
+  const wakeTime = document.getElementById('wake-input').value;
+  if(scoreInput.value==='' || isNaN(n) || n<0 || n>100){
+    alert('请输入 0–100 之间的分数');
+    return;
+  }
+  if(!date){ alert('请选择日期'); return; }
+  // 补录范围校验：最近7天
+  const min = daysAgo(6), max = todayStr();
+  if(date<min || date>max){
+    alert('只能记录最近 7 天（'+fmtDateCN(min)+' ~ '+fmtDateCN(max)+'）');
+    return;
+  }
+  state.records[date] = {score: Math.round(n), note, sleepTime, wakeTime, updatedAt: Date.now()};
+  saveState();
+  // 清空
+  scoreInput.value=''; document.getElementById('note-input').value='';
+  document.getElementById('date-input').value = todayStr();
+  document.getElementById('sleep-input').value='';
+  document.getElementById('wake-input').value='';
+  document.getElementById('score-emoji').textContent='🫥';
+  renderEnergy();
+});
+
+function renderChart(){
+  const list = energyRecords(chartRange);
+  const wrap = document.getElementById('chart-wrap');
+  const W = 360, H = 200, padL = 34, padR = 12, padT = 18, padB = 30;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const has = list.filter(x=>x.rec).length;
+  if(has===0){ wrap.innerHTML='<div class="muted" style="text-align:center;padding:30px 0;">暂无数据，先记录一条吧</div>'; return; }
+
+  const x = i => padL + (innerW * i) / (list.length-1 || 1);
+  const y = s => padT + innerH * (1 - s/100);
+
+  let svg = '<svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+  // 网格 + 刻度
+  for(let g=0; g<=100; g+=20){
+    svg += '<line x1="'+padL+'" y1="'+y(g)+'" x2="'+(W-padR)+'" y2="'+y(g)+'" stroke="#efe9e2" stroke-width="1"/>';
+    svg += '<text x="'+(padL-8)+'" y="'+(y(g)+4)+'" font-size="10" fill="#b6b2bf" text-anchor="end">'+g+'</text>';
+  }
+  // 平均线
+  const avg = list.filter(x=>x.rec).reduce((a,b)=>a+b.rec.score,0) / has;
+  svg += '<line x1="'+padL+'" y1="'+y(avg)+'" x2="'+(W-padR)+'" y2="'+y(avg)+'" stroke="#ff8f6b" stroke-width="1.5" stroke-dasharray="5,4"/>';
+  svg += '<text x="'+(W-padR)+'" y="'+(y(avg)-4)+'" font-size="10" fill="#ff8f6b" text-anchor="end">均 '+avg.toFixed(0)+'</text>';
+
+  // 折线 + 面积
+  let line='', area='';
+  list.forEach((item,i)=>{
+    if(item.rec){
+      const px=x(i), py=y(item.rec.score);
+      line += (i===0?'M':'L')+px+' '+py+' ';
+      if(area==='') area = 'M'+px+' '+py+' ';
+      else area += 'L'+px+' '+py+' ';
+    }
+  });
+  const firstIdx = list.findIndex(x=>x.rec);
+  const lastIdx = [...list].reverse().findIndex(x=>x.rec);
+  const lastI = list.length-1-lastIdx;
+  area += 'L'+x(lastI)+' '+(padT+innerH)+' L'+x(firstIdx)+' '+(padT+innerH)+' Z';
+  svg += '<path d="'+area+'" fill="url(#grad)" opacity="0.25"/>';
+  svg += '<defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7c6cf0"/><stop offset="100%" stop-color="#7c6cf0" stop-opacity="0"/></linearGradient></defs>';
+  svg += '<path d="'+line+'" fill="none" stroke="#7c6cf0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+  // 数据点
+  list.forEach((item,i)=>{
+    if(item.rec){
+      const t = scoreTier(item.rec.score);
+      svg += '<circle cx="'+x(i)+'" cy="'+y(item.rec.score)+'" r="4.5" fill="#fff" stroke="'+t.color+'" stroke-width="2.5"/>';
+    }
+  });
+  // X 轴标签（稀疏显示）
+  list.forEach((item,i)=>{
+    if(chartRange==='week' || i%5===0){
+      const lb = chartRange==='week' ? (item.date.slice(5).replace('-','/')) : item.date.slice(8);
+      svg += '<text x="'+x(i)+'" y="'+(H-8)+'" font-size="10" fill="#b6b2bf" text-anchor="middle">'+lb+'</text>';
+    }
+  });
+  svg += '</svg>';
+  wrap.innerHTML = svg;
+}
+
+function renderStats(){
+  const list = energyRecords(chartRange);
+  const recs = list.filter(x=>x.rec);
+  const box = document.getElementById('stats');
+  const trend = document.getElementById('trend-line');
+  const alertBox = document.getElementById('alert-box');
+  alertBox.className = 'alert-box';
+  alertBox.textContent='';
+
+  if(recs.length===0){
+    box.innerHTML='<div class="muted" style="grid-column:1/4;text-align:center;padding:10px;">暂无数据</div>';
+    trend.innerHTML='';
+    return;
+  }
+  const scores = recs.map(x=>x.rec.score);
+  const avg = scores.reduce((a,b)=>a+b,0)/scores.length;
+  const max = Math.max(...scores);
+  const min = Math.min(...scores);
+  const last = recs[recs.length-1].rec.score;
+
+  box.innerHTML =
+    '<div class="stat"><div class="v">'+avg.toFixed(0)+'</div><div class="k">平均</div></div>'+
+    '<div class="stat"><div class="v" style="color:#2ec4a6;">'+max+'</div><div class="k">最高</div></div>'+
+    '<div class="stat"><div class="v" style="color:#f2a93b;">'+min+'</div><div class="k">最低</div></div>';
+
+  // 趋势：对比上一周期平均
+  const cur = energyRecords(chartRange);
+  const prevDays = chartRange==='week'?7:30;
+  let prev=[];
+  for(let i=prevDays;i<prevDays*2;i++){
+    const d=daysAgo(i);
+    if(state.records[d]) prev.push(state.records[d].score);
+  }
+  let trendTxt='';
+  if(prev.length>0){
+    const prevAvg = prev.reduce((a,b)=>a+b,0)/prev.length;
+    const diff = avg - prevAvg;
+    if(Math.abs(diff)<2) trendTxt = '📊 与上一周期持平';
+    else if(diff>0) trendTxt = '📈 比上一周期 '+diff.toFixed(0)+' 分（回升）';
+    else trendTxt = '📉 比上一周期 '+Math.abs(diff).toFixed(0)+' 分（回落）';
+  } else {
+    trendTxt = '📊 暂无上一周期可对比';
+  }
+  trend.innerHTML = trendTxt;
+
+  // 低谷提醒：连续≥3天低于阈值
+  const th = state.settings.lowThreshold || 40;
+  let streak=0;
+  for(let i=0;i<list.length;i++){
+    const r=list[i].rec;
+    if(r && r.score < th){ streak++; }
+    else streak=0;
+    if(streak>=3){
+      alertBox.className='alert-box warn show';
+      alertBox.innerHTML='⚠️ 已连续 <b>'+streak+'</b> 天精力低于 '+th+' 分（'+fmtDateCN(list[i].date)+'起），注意休息、补充睡眠，给自己放个假吧。';
+      break;
+    }
+  }
+  if(streak===0){
+    alertBox.className='alert-box good show';
+    alertBox.innerHTML='✨ 近期精力状态平稳，继续保持良好的作息与节奏。';
+  }
+}
+
+function renderSleepChart(){
+  const list = energyRecords(chartRange);
+  const wrap = document.getElementById('sleep-chart-wrap');
+  const W=360, H=180, padL=34, padR=12, padT=18, padB=30;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const data = list.map(item => {
+    const r = item.rec;
+    const dur = r ? sleepDurationHours(r.sleepTime, r.wakeTime) : null;
+    return {date: item.date, dur};
+  });
+  const has = data.filter(x => x.dur != null).length;
+  if(has === 0){ wrap.innerHTML = '<div class="muted" style="text-align:center;padding:30px 0;">暂无睡眠数据，记录睡眠后这里会显示柱状图</div>'; return; }
+
+  const maxDur = Math.max(...data.filter(x => x.dur != null).map(x => x.dur), 8);
+  const x = i => padL + (innerW * i) / (list.length - 1 || 1);
+  const y = v => padT + innerH * (1 - v / maxDur);
+  const barW = innerW / list.length / 2;
+
+  let svg = '<svg class="sleep-chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+  const step = Math.ceil(maxDur / 4);
+  for(let g=0; g<=maxDur; g+=step){
+    svg += '<line x1="'+padL+'" y1="'+y(g)+'" x2="'+(W-padR)+'" y2="'+y(g)+'" stroke="#efe9e2" stroke-width="1"/>';
+    svg += '<text x="'+(padL-8)+'" y="'+(y(g)+4)+'" font-size="10" fill="#b6b2bf" text-anchor="end">'+g+'h</text>';
+  }
+  data.forEach((item,i)=>{
+    if(item.dur != null){
+      const px = x(i), bh = innerH * (item.dur / maxDur), py = padT + innerH - bh;
+      svg += '<rect x="'+(px-barW/2)+'" y="'+py+'" width="'+barW+'" height="'+bh+'" rx="4" fill="#7c6cf0" opacity="0.85"/>';
+      svg += '<text x="'+px+'" y="'+(py-6)+'" font-size="10" fill="#7c6cf0" text-anchor="middle">'+item.dur.toFixed(1)+'</text>';
+    }
+  });
+  data.forEach((item,i)=>{
+    if(chartRange==='week' || i%5===0){
+      const lb = chartRange==='week' ? item.date.slice(5).replace('-','/') : item.date.slice(8);
+      svg += '<text x="'+x(i)+'" y="'+(H-8)+'" font-size="10" fill="#b6b2bf" text-anchor="middle">'+lb+'</text>';
+    }
+  });
+  svg += '</svg>';
+  wrap.innerHTML = svg;
+}
+
+function calendarDays(){
+  const mon = mondayOfThisWeek();
+  const start = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 7);
+  const days = [];
+  for(let i=0; i<14; i++){
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    days.push(toDateStr(d));
+  }
+  return days;
+}
+
+function renderCalendar(){
+  const box = document.getElementById('calendar');
+  const days = calendarDays();
+  const wd = ['周日','周一','周二','周三','周四','周五','周六'];
+  box.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'cal-grid';
+  days.forEach(d => {
+    const [y,m,day] = d.split('-').map(Number);
+    const dateObj = new Date(y, m-1, day);
+    const w = wd[dateObj.getDay()];
+    const rec = state.records[d];
+    const t = rec ? scoreTier(rec.score) : null;
+    const el = document.createElement('div');
+    const isFuture = d > todayStr();
+    el.className = 'cal-day' + (d===todayStr() ? ' today' : '') + (rec ? '' : ' empty') + (isFuture ? ' future' : '');
+    el.innerHTML = '<div class="wd">'+w+'</div><div class="dn">'+day+'</div>' +
+      (rec ? '<div class="emoji">'+t.emoji+'</div><div class="score">'+rec.score+'</div>' : '<div class="emoji">·</div>');
+    el.onclick = () => {
+      if(isFuture){ showToast('未来日期不可记录'); return; }
+      openDayDetail(d);
+    };
+    grid.appendChild(el);
+  });
+  box.appendChild(grid);
+}
+
+let dayModalEditingDate = null;
+function openDayDetail(d){
+  if(d > todayStr()){ showToast('未来日期不可记录'); return; }
+  dayModalEditingDate = d;
+  document.getElementById('day-modal-title').textContent = d + ' 记录详情';
+  renderDayDetail(d);
+  document.getElementById('day-modal').classList.add('show');
+}
+function closeDayDetail(){ document.getElementById('day-modal').classList.remove('show'); }
+
+function renderDayDetail(d){
+  const box = document.getElementById('day-detail');
+  const rec = state.records[d];
+  if(!rec){
+    box.innerHTML = '<div class="detail-empty">这一天还没有记录</div>' +
+      '<div style="margin-top:14px;"><button class="btn ghost" onclick="enableDayEdit(\''+d+'\')">补记</button></div>';
+    return;
+  }
+  const t = scoreTier(rec.score);
+  const dur = sleepDurationHours(rec.sleepTime, rec.wakeTime);
+  box.innerHTML =
+    '<div class="detail-row"><div class="detail-label">精力分数</div><div class="detail-value" style="color:'+t.color+'">'+t.emoji+' '+rec.score+'</div></div>' +
+    '<div class="detail-row"><div class="detail-label">睡眠时长</div><div class="detail-value">'+formatDuration(dur)+'</div></div>' +
+    '<div class="detail-row"><div class="detail-label">入睡 / 起床</div><div class="detail-value">'+(rec.sleepTime||'—')+' / '+(rec.wakeTime||'—')+'</div></div>' +
+    '<div style="margin-top:12px;"><div class="detail-label" style="margin-bottom:6px;">备注</div><div class="detail-note">'+escapeHtml(rec.note||'无')+'</div></div>' +
+    '<div style="margin-top:14px;display:flex;gap:10px;">' +
+      '<button class="btn small ghost" onclick="enableDayEdit(\''+d+'\')">修改</button>' +
+      '<button class="btn small ghost" onclick="closeDayDetail()">关闭</button>' +
+    '</div>';
+}
+
+function enableDayEdit(d){
+  const box = document.getElementById('day-detail');
+  const rec = state.records[d] || {};
+  box.innerHTML =
+    '<div style="margin-bottom:8px;">' +
+      '<label class="field">精力分数</label>' +
+      '<input type="number" id="day-score" min="0" max="100" value="'+(rec.score||'')+'" placeholder="0-100">' +
+    '</div>' +
+    '<div class="sleep-row">' +
+      '<div><label class="field" style="font-size:11px;margin:0 0 4px;">入睡时间</label><input type="time" id="day-sleep" value="'+(rec.sleepTime||'')+'"></div>' +
+      '<div><label class="field" style="font-size:11px;margin:0 0 4px;">起床时间</label><input type="time" id="day-wake" value="'+(rec.wakeTime||'')+'"></div>' +
+    '</div>' +
+    '<label class="field">备注</label>' +
+    '<input type="text" id="day-note" value="'+escapeHtml(rec.note||'')+'" placeholder="备注…">' +
+    '<div style="margin-top:14px;display:flex;gap:10px;">' +
+      '<button class="btn small" id="day-save">保存</button>' +
+      '<button class="btn small ghost" onclick="renderDayDetail(\''+d+'\')">取消</button>' +
+    '</div>';
+  document.getElementById('day-save').onclick = () => saveDayEdit(d);
+}
+
+function saveDayEdit(d){
+  const scoreEl = document.getElementById('day-score');
+  const score = Number(scoreEl.value);
+  const note = document.getElementById('day-note').value.trim();
+  const sleepTime = document.getElementById('day-sleep').value;
+  const wakeTime = document.getElementById('day-wake').value;
+  if(scoreEl.value==='' || isNaN(score) || score<0 || score>100){
+    alert('请输入 0–100 之间的分数'); return;
+  }
+  // 补录范围校验：最近7天（含当天），未来日期禁止（保存层兜底）
+  const min = daysAgo(6), max = todayStr();
+  if(d < min || d > max){
+    alert('只能记录最近 7 天（'+fmtDateCN(min)+' ~ '+fmtDateCN(max)+'）'); return;
+  }
+  state.records[d] = {score: Math.round(score), note, sleepTime, wakeTime, updatedAt: Date.now()};
+  saveState();
+  renderDayDetail(d);
+  renderHome();
+  renderEnergy();
+}
+
+function renderRemind(){
+  document.getElementById('remind-time').value = state.settings.remindTime || '';
+}
+document.getElementById('remind-btn').addEventListener('click', async ()=>{
+  const t = document.getElementById('remind-time').value;
+  state.settings.remindTime = t;
+  saveState();
+  if(t){
+    const [h,m] = t.split(':').map(Number);
+    // 原生环境：用系统级定时通知（App 关闭也能弹）
+    if(window.Notify && Notify.isNative()){
+      const ok = await Notify.requestPermission();
+      if(!ok){ alert('通知权限被拒绝，请到系统设置里允许「观己」发送通知'); return; }
+      await Notify.scheduleDaily(h, m);
+      alert('已设置每日 '+t+' 系统提醒（App 关闭也会通知）');
+    } else if('Notification' in window){
+      if(Notification.permission==='default') Notification.requestPermission();
+      alert('已设置每日 '+t+' 提醒（当前为浏览器预览，仅应用内生效）');
+    } else {
+      alert('已保存 '+t+'，当前环境不支持系统通知');
+    }
+  } else {
+    if(window.Notify && Notify.isNative()){
+      await Notify.cancelRemind();
+    }
+    alert('已关闭提醒');
+  }
+});
+
+document.getElementById('export-btn').addEventListener('click', ()=>{
+  Storage.exportCSV();
+});
+
+// ---- 数据备份 / 恢复 ----
+document.getElementById('backup-btn').addEventListener('click', async ()=>{
+  const json = JSON.stringify(state);
+  // 下载 JSON 文件
+  const blob = new Blob([json], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '观己备份_' + todayStr() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+  // 原生环境再写一份到应用目录，覆盖安装时仍在
+  if(window.Native && Native.isNative()){
+    try{ await Native.writeBackup(json); showToast('备份文件已下载'); }
+    catch(e){ showToast('备份文件已下载'); }
+  } else {
+    showToast('备份文件已下载');
+  }
+});
+
+document.getElementById('restore-btn').addEventListener('click', ()=>{
+  document.getElementById('restore-file').click();
+});
+
+document.getElementById('restore-file').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data || typeof data.records !== 'object'){ alert('备份文件格式不对'); return; }
+      state = Object.assign({records:{}, settings:{remindTime:'', lowThreshold:40}}, data);
+      saveState();
+      renderHome();
+      alert('数据恢复成功');
+    }catch(err){ alert('恢复失败：'+err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ---- 迭代需求记录 ----
+function renderReqList(){
+  const box = document.getElementById('req-list');
+  const list = ReqStorage.load();
+  box.innerHTML = '';
+  if(list.length === 0){ box.innerHTML = '<div class="req-empty">还没有记录需求，点击下方添加</div>'; }
+  list.forEach((txt, i)=>{
+    const item = document.createElement('div'); item.className = 'req-item';
+    const ta = document.createElement('textarea'); ta.value = txt; ta.placeholder = '输入迭代需求…';
+    ta.oninput = ()=>{ list[i] = ta.value; ReqStorage.save(list); };
+    const del = document.createElement('button'); del.className = 'req-del'; del.textContent = '×';
+    del.onclick = ()=>{ list.splice(i, 1); ReqStorage.save(list); renderReqList(); };
+    item.appendChild(ta); item.appendChild(del);
+    box.appendChild(item);
+  });
+  const add = document.createElement('button'); add.className = 'req-add'; add.textContent = '+ 添加新需求';
+  add.onclick = ()=>{ list.push(''); ReqStorage.save(list); renderReqList(); box.scrollTop = box.scrollHeight; };
+  box.appendChild(add);
+}
+function closeReqModal(){ document.getElementById('req-modal').classList.remove('show'); }
+document.getElementById('req-float-btn').addEventListener('click', ()=>{ renderReqList(); document.getElementById('req-modal').classList.add('show'); });
+document.getElementById('req-close').addEventListener('click', closeReqModal);
+document.getElementById('req-modal').addEventListener('click', (e)=>{ if(e.target === document.getElementById('req-modal')) closeReqModal(); });
+document.getElementById('req-copy').addEventListener('click', async ()=>{
+  const list = ReqStorage.load().map((t, i)=> (i+1) + '. ' + t).join('\n');
+  if(!list){ showToast('没有需求可复制'); return; }
+  try{
+    await navigator.clipboard.writeText(list);
+  }catch(e){
+    const ta = document.createElement('textarea'); ta.value = list; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  }
+  showToast('已复制全部需求到剪贴板');
+});
+
+// ---- 日期详情弹窗 ----
+document.getElementById('day-close').addEventListener('click', closeDayDetail);
+document.getElementById('day-modal').addEventListener('click', (e)=>{ if(e.target === document.getElementById('day-modal')) closeDayDetail(); });
+
+// 图表 tab
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    tab.classList.add('active');
+    chartRange = tab.dataset.range;
+    renderChart(); renderSleepChart(); renderStats();
+  });
+});
+
+// ---- 轻提示 toast ----
+let toastTimer = null;
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+// ---- 返回键处理（原生返回键 / 侧滑返回）----
+let lastBackTime = 0;
+function handleBack(){
+  const energyVisible = !document.getElementById('energy-view').classList.contains('hidden');
+  if(energyVisible){
+    showView('home');  // 子页面 → 返回主界面
+  } else {
+    const now = Date.now();
+    if(now - lastBackTime < 2000){
+      if(window.Native && Native.isNative()) Native.exitApp();
+    } else {
+      lastBackTime = now;
+      showToast('再按一次返回退出');
+    }
+  }
+}
+if(window.Native && Native.isNative()){
+  Native.onBackButton(()=>{ handleBack(); });
+}
+
+// 初始化
+renderHome();
+</script>
+</body>
+</html>

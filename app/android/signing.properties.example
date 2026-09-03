@@ -1,0 +1,4 @@
+storeFile=../keystore/your-release.keystore
+storePassword=replace-with-local-secret
+keyAlias=replace-with-key-alias
+keyPassword=replace-with-local-secret

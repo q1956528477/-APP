@@ -1,0 +1,27 @@
+# 本机工具与依赖
+.workbuddy/
+app/node_modules/
+
+# Android/Gradle 本机构建产物与配置
+app/android/.gradle/
+app/android/build/
+app/android/app/build/
+app/android/local.properties
+app/android/signing.properties
+app/android/app/google-services.json
+
+# 签名私钥：仅在发布机器的安全位置保存
+app/keystore/
+*.keystore
+*.jks
+
+# 前端桥接产物（由 npm run build:bridges 生成）
+app/www/native.bundle.js
+app/www/notify.bundle.js
+
+# 发布包与临时文件
+*.apk
+*.aab
+*.zip
+*.log
+.DS_Store
