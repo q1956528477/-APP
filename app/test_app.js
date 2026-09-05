@@ -5,6 +5,7 @@ const html = fs.readFileSync('www/index.html', 'utf8');
 const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true });
 const { window } = dom;
 const { document } = window;
+window.scrollTo = () => {};
 
 // 等脚本执行完（同步脚本，直接可用）
 const results = [];
@@ -31,8 +32,8 @@ check('输入75分显示表情', document.getElementById('score-emoji').textCont
 document.getElementById('note-input').value = '今天状态不错';
 document.getElementById('save-btn').click();
 const saved = JSON.parse(window.localStorage.getItem('guanji_data_v1'));
-check('保存后 records 有今天', saved.records[window.todayStr ? 'x' : 'x'] !== undefined || Object.keys(saved.records).length === 1);
-const todayKey = Object.keys(saved.records)[0];
+const todayKey = document.getElementById('date-input').value;
+check('保存后 records 有今天', !!saved.records[todayKey]);
 check('分数=75', saved.records[todayKey].score === 75);
 check('备注已保存', saved.records[todayKey].note === '今天状态不错');
 
@@ -45,8 +46,9 @@ check('图表含平均线文字', svg.textContent.includes('均'));
 const statsText = document.getElementById('stats').textContent;
 check('统计含平均/最高/最低', statsText.includes('平均') && statsText.includes('最高') && statsText.includes('最低'));
 
-// 6. 历史列表
-check('历史列表有1条', document.querySelectorAll('.h-item').length === 1);
+// 6. 日历应展示今天的记录
+const todayCell = document.querySelector('.cal-day.today');
+check('今日日历格已出现', !!todayCell && todayCell.textContent.includes('75'));
 
 // 7. 越界校验（补录超7天应被拦截）
 const oldAlert = window.alert;
@@ -59,11 +61,16 @@ document.getElementById('save-btn').click();
 check('补录超7天被拦截', alertMsg.includes('最近 7 天'));
 window.alert = oldAlert;
 
-// 8. 修改已有记录
-const editBtn = document.querySelector('.edit-btn');
-check('历史有"修改"按钮', !!editBtn);
+// 8. 通过日期详情修改已有记录
+todayCell.click();
+check('日期详情弹窗已打开', document.getElementById('day-modal').classList.contains('show'));
+const detailText = document.getElementById('day-detail').textContent;
+check('详情显示今日记录', detailText.includes('75') && detailText.includes('今天状态不错'));
+const editBtn = [...document.querySelectorAll('#day-detail button')].find(b => b.textContent.includes('修改'));
+check('详情有"修改"按钮', !!editBtn);
 editBtn.click();
-check('修改回填分数', document.getElementById('score-input').value === '75');
+check('修改回填分数', document.getElementById('day-score').value === '75');
+check('修改回填备注', document.getElementById('day-note').value === '今天状态不错');
 
 console.log('\n===== 测试结果 =====');
 results.forEach(r => console.log(r));
